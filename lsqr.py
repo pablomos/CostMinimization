@@ -2,6 +2,12 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as la
 import numpy as np
 import program as pr
+import matplotlib.pyplot as mp
+import random as rd
+
+# Create CSR matrix from lists of rows, columns and values
+def convert_to_sparse_matrix(mal, nRows, nCols):
+    return sp.csr_matrix((mal[2], (mal[0], mal[1])), shape = (nRows, nCols))
 
 # Create a mock sparse matrix
 def create_mock_sparse_matrix():
@@ -9,8 +15,7 @@ def create_mock_sparse_matrix():
     rows = [0, 1, 2]
     cols = [0, 1, 2]
     vals = [3, 5, 7]
-    sparseMatrix = sp.csr_matrix((vals, (rows, cols)), shape = (3, 3))
-    return sparseMatrix
+    return convert_to_sparse_matrix((rows, cols, vals))
 
 # Solve a mock LSQR problem
 def mock_lsqr():
@@ -35,7 +40,7 @@ def lsqr_subset():
 # Compute LSQR for a given A,b
 # A is of the form (rows, cols, vals)
 def lsqr_single(A, b, nCols, aTol, bTol, verbose):
-    aSparse = sp.csr_matrix((A[2], (A[0], A[1])), shape = (len(b), nCols))
+    aSparse = convert_to_sparse_matrix(A, len(b), nCols)
     return (aSparse, lsqr_single_sparse(aSparse, b, aTol, bTol, verbose))
 
 # Compute LSQR for a given A, b
@@ -43,24 +48,34 @@ def lsqr_single(A, b, nCols, aTol, bTol, verbose):
 def lsqr_single_sparse(A, b, aTol, bTol, verbose):
     return la.lsqr(A, b, atol = aTol, btol = bTol, show = verbose)[:3]
 
+# Compute the cost function; A must be of the form (rows, cols, vals)
+def cost(A, b, x):
+    return pr.cost(pr.difference_vector(A, x, b))
+
 # Try LSQR with the entire data
 def lsqr(aFile, bFile, nCols, aTol = 1e-5, bTol = 1e-9):
     # Read the data
     (aLists,b) = pr.read_data(aFile, bFile)
-    (aSparse, (x, reason, nIters)) = lsqr_single(aLists, b, nCols, aTol, bTol, True)
-    diffVec = pr.difference_vector(aLists, x, b)
-    L = pr.cost(diffVec)
+    (x, reason, nIters) = lsqr_single(aLists, b, nCols, aTol, bTol, True)[1]
+    L = cost(aLists, b, x)
     return (x, L, reason, nIters, aLists, b)
 
 # Try LSQR with multiple b vectors
-'''def lsqr_test():
-    nTests = 100
+def lsqr_test(aTol, bTol):
+    nTests = 10
+    lenX = 100000
 
     # Generate nTests random x vectors
-    xs = [[rd.randint(0, 100)/10. for j in range(100000)] for i in range(nTests)]
+    print("Generating random xs...")
+    xs = [[rd.randint(0, 100)/10. for j in range(lenX)] for i in range(nTests)]
     # Generate the corresponding b vectors
-    A = pr.read_data('Archive/a.txt', 'Archive/b.txt')[0]
+    print("Reading the real data...")
+    aAndRealB = pr.read_data('Archive/a.txt', 'Archive/b.txt')
+    A = aAndRealB[0]
+    realB = aAndRealB[1]
+    print("Initialising the corresponding bs...")
     bs = [np.zeros(300000) for i in range(len(xs))]
+    print("Filling the values of bs...")
     for aRow in range(len(A[0])):
         row = A[0][aRow]
         col = A[1][aRow]
@@ -71,15 +86,41 @@ def lsqr(aFile, bFile, nCols, aTol = 1e-5, bTol = 1e-9):
             b[row] += (val * x[col])
 
     # For each b vector, find x using lsqr
-    for b in bs:
-        
+    print("Converting to sparse matrix...")
+    aSparse = convert_to_sparse_matrix(A, len(realB), lenX)
+    predictedXs = []
+    iters = []
+    costs = []
+    fracDiffs = []
+    for i in range(len(bs)):
+        print("Test " + str(i))
+        b = bs[i]
+        (x, reason, nIters) = lsqr_single_sparse(aSparse, b, aTol, bTol, False)
+        predictedXs.append(x)
+        iters.append(nIters)
 
-    # Compare the x obtained with the one used in the input using program.py
+        # Compare the x obtained with the one used in the input using program.py
+        pr.compare_x_arrays(x, xs[i])
 
-    # Make sure the cost was less than 1e-3 in all cases
+        # Make sure the cost was less than 1e-3 in all cases
+        L = cost(A, b, x)
+        if L > 1e-3:
+            print("The cost is too high: " + str(L))
+        costs.append(L)
+
+        # Compute one of the rows manually
+        firstRow = A[0][0]
+        firstColumn = A[1][0]
+        firstValue = A[2][0]
+        fracDiff = (firstValue * x[firstColumn] - b[firstRow]) / b[firstRow]
+        if fracDiff > 0.01:
+            print("Difference is too large!")
+        fracDiffs.append(fracDiff)
 
     # Look at the number of iterations for each test and see if they are roughly constant
+    mp.plot(range(len(bs)), iters)
+    mp.show()
 
-    # Compute the time it took for each iteration
-
-    # Compute one of the rows manually'''
+    # Look at the costs for each test
+    mp.plot(range(len(bs)), costs)
+    mp.show()

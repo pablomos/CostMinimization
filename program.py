@@ -168,31 +168,32 @@ def gradient_descent_step(x, learningRate, A, diffVec):
     return outX
 
 # Compare a "real" x and the predicted one
-def compare_x(x, xFile):
-        theXFile = open(xFile, 'r')
-        realX = []
-        for line in theXFile:
-            realX.append(float(line))
+def compare_x_arrays(x, realX):
         if len(realX) != len(x):
             print("Different numbers of elements in real and predicted x!")
             return -1
         xSq = 0
         diffX = 0
+        normPredictedX = 0
         for i in range(len(realX)):
             if x[i] == 0:
                 continue
             xSq += (realX[i] * realX[i])
+            normPredictedX += (x[i] * x[i])
             diffX += ((realX[i] - x[i]) * (realX[i] - x[i]))
-        fracDiff = np.sqrt(diffX) / np.sqrt(xSq)
-        print("The fractional difference is " + str(fracDiff))
-        print(x[:10])
-        print("-------")
-        print(realX[:10])
-        print("-------")
-        print([x[i] for i in range(len(x)) if x[i] != 0])
-        print("-------")
-        print([realX[i] for i in range(len(x)) if x[i] != 0])
+        normRealX = np.sqrt(xSq)
+        normPredictedX = np.sqrt(normPredictedX)
+        fracDiff = np.sqrt(diffX) / normRealX
+        return (normPredictedX, normRealX, fracDiff)
 
+# Compare a "real" x and the predicted one
+def compare_x(x, xFile):
+        theXFile = open(xFile, 'r')
+        realX = []
+        for line in theXFile:
+            realX.append(float(line))
+        theXFile.close()
+        print(compare_x_arrays(x, realX))
 
 # Perform gradient descent on some data
 def gradient_descent(aFile, bFile, nCols, learningRate, xFile, maxIter, adaptive, adaptiveFactor):
