@@ -137,6 +137,19 @@ def difference_vector(A, x, b):
         res[A[0][i]] += (A[2][i] * x[A[1][i]])
     return res
 
+def difference_vector_dict_and_cost(A, x, b):
+    res = []
+    theCost = 0
+    for i in range(len(b)):
+        res.append(-b[i])
+        if i in A:
+            for col in A[i].keys():
+                res[-1] += A[i][col] * x[col]
+        else:
+            print("Warning: row " + str(i) + " not in A")
+        theCost += (res[-1] * res[-1])
+    return (res, 0.5 * theCost)
+
 # Return the cost function given the difference vector Ax-b
 def cost(diffVec):
     theCost = 0
@@ -179,11 +192,11 @@ def compare_x(x, xFile):
 
 
 # Perform gradient descent on some data
-def gradient_descent(aFile, bFile, nCols, learningRate, xFile, maxIter, adaptive):
+def gradient_descent(aFile, bFile, nCols, learningRate, xFile, maxIter, adaptive, adaptiveFactor):
     # Read the data
     (A,b) = read_data(aFile, bFile)
     # Initialise x
-    x = [5 for i in range(nCols)]
+    x = [1 for i in range(nCols)]
     # Perform gradient descent until the stopping condition is satisfied
     L = 1e9
     nTries = 0
@@ -197,15 +210,16 @@ def gradient_descent(aFile, bFile, nCols, learningRate, xFile, maxIter, adaptive
             break
         
         # If the cost worsened, go back and decrease the learning rate
+        realL = L
         if oldL < L and nTries > 10 and adaptive:
             x = oldX
             diffVec = oldDiffVec
-            learningRate /= 1.1
+            learningRate /= (adaptiveFactor * adaptiveFactor)
             L = oldL
-        elif oldL > L and nTries > 10 and adaptive:
-            learningRate *= 1.1
+        elif oldL > L and nTries > 10 and adaptive and L < 10:
+            learningRate *= adaptiveFactor
         oldL = L
-        print("Cost = " + str(L) + ", learning rate " + str(learningRate) + ", iteration " + str(nTries))
+        print("Cost = " + str(realL) + ", learning rate " + str(learningRate) + ", iteration " + str(nTries))
 
         oldX = x
         oldDiffVec = diffVec
