@@ -40,14 +40,20 @@ def lsqr_subset():
 
 # Compute LSQR for a given A,b
 # A is of the form (rows, cols, vals)
-def lsqr_single(A, b, nCols, aTol, bTol, verbose):
+def lsqr_single(A, b, nCols, aTol, bTol, verbose, maxIter):
+    t0 = tm.time()
     aSparse = convert_to_sparse_matrix(A, len(b), nCols)
-    return (aSparse, lsqr_single_sparse(aSparse, b, aTol, bTol, verbose))
+    t1 = tm.time()
+    print(str(t1 - t0) + " s converting to a sparse matrix")
+    return (aSparse, lsqr_single_sparse(aSparse, b, aTol, bTol, verbose, maxIter))
 
 # Compute LSQR for a given A, b
 # A is a Python sparse matrix
-def lsqr_single_sparse(A, b, aTol, bTol, verbose):
-    r = la.lsqr(A, b, atol = aTol, btol = bTol, show = verbose)[:3]
+def lsqr_single_sparse(A, b, aTol, bTol, verbose, maxIter):
+    t0 = tm.time()
+    r = la.lsqr(A, b, atol = aTol, btol = bTol, show = verbose, iter_lim = maxIter)[:4]
+    t1 = tm.time()
+    print(str(t1 - t0) + " s running the actual algorithm")
     return r
 
 # Compute the cost function; A must be of the form (rows, cols, vals)
@@ -58,11 +64,21 @@ def cost(A, b, x):
 # aTol and bTol represent the actual error in the input data
 # The optimal number of maxIter found in find_iters()
 def lsqr(aFile, bFile, nCols, aTol = 1e-6, bTol = 1e-7, verbose = True, maxIter = 150):
+    tStart = tm.time()
+    t0 = tm.time()
     # Read the data
     (aLists,b) = pr.read_data(aFile, bFile)
-    (aSparse, (x, reason, nIters)) = lsqr_single(aLists, b, nCols, aTol, bTol, verbose)
-    L = cost(aLists, b, x)
-    return (x, L, reason, nIters, aLists, b, aSparse)
+    t1 = tm.time()
+    print(str(t1 - t0) + " s before lsqr_single")
+    (aSparse, (x, reason, nIters, r)) = lsqr_single(aLists, b, nCols, aTol, bTol, verbose, maxIter)
+    t0 = tm.time()
+    L = 0.5 * r * r
+    t1 = tm.time()
+    print(str(t1 - t0) + ' s calculating the cost ' + str(L))
+    retVal = (x, L, reason, nIters, aLists, b, aSparse)
+    tEnd = tm.time()
+    print(str(tEnd - tStart) + " s in total")
+    return retVal
 
 # Generate random b vectors
 def gen_rand_b(A, realB, lenX, nTests, xMax, sc):
