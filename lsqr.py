@@ -17,8 +17,7 @@ def mock_lsqr():
     # The vector b will be [11, 13, 17]
     A = create_mock_sparse_matrix()
     b = [11, 13, 17]
-    retVal = la.lsqr(A, b)
-    x = retVal[0]
+    (x, reason, nIters) = lsqr_single_sparse(A, b, 1e-8, 1e-8, False)
     diffVec = A * x - b
     diffVecSq = diffVec * diffVec
     sumOfTerms = np.sum(diffVecSq)
@@ -28,26 +27,33 @@ def mock_lsqr():
 # Try LSQR with a subset of the real data
 def lsqr_subset():
     (A, b) = pr.reduce_data(1000, 1000)
-    aSparse = sp.csr_matrix((A[2], (A[0], A[1])), shape = (1000, 1000))
-    retVal = la.lsqr(aSparse, b)
-    x = retVal[0]
+    (aSparse, (x, reason, nIters)) = lsqr_single(A, b, 1000, 1e-8, 1e-8, False)
     diffVec = aSparse * x - b
     L = 0.5 * np.sum(diffVec * diffVec)
     return (x, L)
+
+# Compute LSQR for a given A,b
+# A is of the form (rows, cols, vals)
+def lsqr_single(A, b, nCols, aTol, bTol, verbose):
+    aSparse = sp.csr_matrix((A[2], (A[0], A[1])), shape = (len(b), nCols))
+    return (aSparse, lsqr_single_sparse(aSparse, b, aTol, bTol, verbose))
+
+# Compute LSQR for a given A, b
+# A is a Python sparse matrix
+def lsqr_single_sparse(A, b, aTol, bTol, verbose):
+    return la.lsqr(A, b, atol = aTol, btol = bTol, show = verbose)[:3]
 
 # Try LSQR with the entire data
 def lsqr(aFile, bFile, nCols, aTol = 1e-5, bTol = 1e-9):
     # Read the data
     (aLists,b) = pr.read_data(aFile, bFile)
-    A = sp.csr_matrix((aLists[2], (aLists[0], aLists[1])), shape = (len(b), nCols))
-    retVal = la.lsqr(A, b, atol = aTol, btol = bTol, show = True)
-    x = retVal[0]
+    (aSparse, (x, reason, nIters)) = lsqr_single(aLists, b, nCols, aTol, bTol, True)
     diffVec = pr.difference_vector(aLists, x, b)
     L = pr.cost(diffVec)
-    return (x, L, retVal[1], retVal[2], aLists, b)
-    
+    return (x, L, reason, nIters, aLists, b)
+
 # Try LSQR with multiple b vectors
-def lsqr_test():
+'''def lsqr_test():
     nTests = 100
 
     # Generate nTests random x vectors
@@ -65,6 +71,8 @@ def lsqr_test():
             b[row] += (val * x[col])
 
     # For each b vector, find x using lsqr
+    for b in bs:
+        
 
     # Compare the x obtained with the one used in the input using program.py
 
@@ -73,3 +81,5 @@ def lsqr_test():
     # Look at the number of iterations for each test and see if they are roughly constant
 
     # Compute the time it took for each iteration
+
+    # Compute one of the rows manually'''
