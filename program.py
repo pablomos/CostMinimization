@@ -42,6 +42,9 @@ def reduce_data(nRows, nCols):
                 nonZeroEls += 1
             bOutFile.write(str(el) + "\n")
     print("There are " + str(nonZeroEls) + " non-zero elements in b")
+    
+    A = (rows, cols, vals)
+    return (A, b)
 
 # Find the smallest row and column numbers in A
 def find_smallest_row_column():
