@@ -61,20 +61,23 @@ def lsqr(aFile, bFile, nCols, aTol = 1e-5, bTol = 1e-9):
     return (x, L, reason, nIters, aLists, b)
 
 # Try LSQR with multiple b vectors
-def lsqr_test(aTol, bTol):
-    nTests = 10
+# 100 tests with tolerances 1e-7, 1e-9 all passed with ~400 iterations
+def lsqr_test(aTol, bTol, nTests):
     lenX = 100000
+    maxXValue = 10
+    maxL = 1e-3
+    maxFracDiff = 1e-2
 
     # Generate nTests random x vectors
     print("Generating random xs...")
-    xs = [[rd.randint(0, 100)/10. for j in range(lenX)] for i in range(nTests)]
+    xs = [[rd.randint(0, maxXValue * 10)/10. for j in range(lenX)] for i in range(nTests)]
     # Generate the corresponding b vectors
     print("Reading the real data...")
     aAndRealB = pr.read_data('Archive/a.txt', 'Archive/b.txt')
     A = aAndRealB[0]
     realB = aAndRealB[1]
     print("Initialising the corresponding bs...")
-    bs = [np.zeros(300000) for i in range(len(xs))]
+    bs = [np.zeros(len(realB)) for i in range(len(xs))]
     print("Filling the values of bs...")
     for aRow in range(len(A[0])):
         row = A[0][aRow]
@@ -102,9 +105,9 @@ def lsqr_test(aTol, bTol):
         # Compare the x obtained with the one used in the input using program.py
         pr.compare_x_arrays(x, xs[i])
 
-        # Make sure the cost was less than 1e-3 in all cases
+        # Make sure the cost was less than maxL in all cases
         L = cost(A, b, x)
-        if L > 1e-3:
+        if L > maxL:
             print("The cost is too high: " + str(L))
         costs.append(L)
 
@@ -112,8 +115,8 @@ def lsqr_test(aTol, bTol):
         firstRow = A[0][0]
         firstColumn = A[1][0]
         firstValue = A[2][0]
-        fracDiff = (firstValue * x[firstColumn] - b[firstRow]) / b[firstRow]
-        if fracDiff > 0.01:
+        absDiff = (firstValue * x[firstColumn] - b[firstRow])
+        if (b[firstRow] == 0 and absDiff != 0) or (b[firstRow] != 0 and absDiff / b[firstRow] > maxFracDiff):
             print("Difference is too large!")
         fracDiffs.append(fracDiff)
 
