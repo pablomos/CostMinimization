@@ -53,29 +53,32 @@ def cost(A, b, x):
     return pr.cost(pr.difference_vector(A, x, b))
 
 # Try LSQR with the entire data
-def lsqr(aFile, bFile, nCols, aTol = 1e-5, bTol = 1e-9):
+# aTol and bTol represent the actual error in the input data
+def lsqr(aFile, bFile, nCols, aTol = 1e-6, bTol = 1e-7):
     # Read the data
     (aLists,b) = pr.read_data(aFile, bFile)
-    (x, reason, nIters) = lsqr_single(aLists, b, nCols, aTol, bTol, True)[1]
+    (aSparse, (x, reason, nIters)) = lsqr_single(aLists, b, nCols, aTol, bTol, True)
     L = cost(aLists, b, x)
-    return (x, L, reason, nIters, aLists, b)
+    return (x, L, reason, nIters, aLists, b, aSparse)
 
 # Try LSQR with multiple b vectors
-# 100 tests with tolerances 1e-7, 1e-9 all passed with ~400 iterations
 def lsqr_test(aTol, bTol, nTests):
     lenX = 100000
-    maxXValue = 10
     maxL = 1e-3
     maxFracDiff = 1e-2
+    maxXValue = 10
+    multFac = 1. / bTol
 
     # Generate nTests random x vectors
     print("Generating random xs...")
-    xs = [[rd.randint(0, maxXValue * 10)/10. for j in range(lenX)] for i in range(nTests)]
+    xs = [[rd.randint(1, maxXValue * multFac)/float(multFac) for j in range(lenX)] for i in range(nTests)]
     # Generate the corresponding b vectors
     print("Reading the real data...")
     aAndRealB = pr.read_data('Archive/a.txt', 'Archive/b.txt')
     A = aAndRealB[0]
-    realB = aAndRealB[1]
+    realB = np.array(aAndRealB[1])
+    realBNorm = np.sqrt(np.sum(realB * realB))
+    print("The real b has norm " + str(realBNorm))
     print("Initialising the corresponding bs...")
     bs = [np.zeros(len(realB)) for i in range(len(xs))]
     print("Filling the values of bs...")
@@ -87,6 +90,10 @@ def lsqr_test(aTol, bTol, nTests):
             x = xs[i]
             b = bs[i]
             b[row] += (val * x[col])
+    for fakeB in bs:
+        fakeBNorm = np.sqrt(np.sum(fakeB * fakeB))
+        factor = realBNorm / fakeBNorm
+        fakeB *= factor
 
     # For each b vector, find x using lsqr
     print("Converting to sparse matrix...")
@@ -117,8 +124,10 @@ def lsqr_test(aTol, bTol, nTests):
         firstValue = A[2][0]
         absDiff = (firstValue * x[firstColumn] - b[firstRow])
         if (b[firstRow] == 0 and absDiff != 0) or (b[firstRow] != 0 and absDiff / b[firstRow] > maxFracDiff):
-            print("Difference is too large!")
-        fracDiffs.append(fracDiff)
+            print("Difference is too large! " + str(x[firstColumn]) + ", " + str(b[firstRow]))
+        fracDiffs.append(absDiff)
+        if b[firstRow] != 0:
+            fracDiffs[-1] /= b[firstRow]
 
     # Look at the number of iterations for each test and see if they are roughly constant
     mp.plot(range(len(bs)), iters)
@@ -127,3 +136,47 @@ def lsqr_test(aTol, bTol, nTests):
     # Look at the costs for each test
     mp.plot(range(len(bs)), costs)
     mp.show()
+
+# This doesn't work because it's meant for square matrices
+def gcrot():
+    aFile = 'Archive/a.txt'
+    bFile = 'Archive/b.txt'
+    nCols = 100000
+
+    (A,b) = pr.read_data(aFile, bFile)
+    aSparse = convert_to_sparse_matrix(A, len(b), len(b))
+    (x, info) = la.gcrotmk(aSparse, b)
+    return (x, info)
+
+def lsmr():
+    aFile = 'Archive/a.txt'
+    bFile = 'Archive/b.txt'
+    nCols = 100000
+
+    (A,b) = pr.read_data(aFile, bFile)
+    aSparse = convert_to_sparse_matrix(A, len(b), nCols)
+    r = la.lsmr(aSparse, b, show = True)
+    return r
+
+def test_tol():
+    aT = 1e-6
+    bT = 1e-6
+
+    (x, L, reason, itn, A, b, aSparse) = lsqr('Archive/A.txt', 'Archive/b.txt', 100000, aT, bT)
+    b = np.array(b)
+    normA = 0
+    for val in A[2]:
+        normA += (val * val)
+    normA = np.sqrt(normA)
+    normX = np.sqrt(np.sum(x * x))
+    normR = np.sqrt(2*L)
+    normB = np.sqrt(np.sum(b * b))
+    
+    RHS = aT * normA * normX + bT * normB
+    LHS = normR
+    print(str(LHS) + ", " + str(RHS))
+    print("Norm A: " + str(normA))
+    print("Norm X: " + str(normX))
+    print("Norm R: " + str(normR))
+    print("Norm B: " + str(normB))
+    print("L: " + str(L))
