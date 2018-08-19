@@ -46,3 +46,30 @@ def lsqr(aFile, bFile, nCols, aTol = 1e-5, bTol = 1e-9):
     L = pr.cost(diffVec)
     return (x, L, retVal[1], retVal[2], aLists, b)
     
+# Try LSQR with multiple b vectors
+def lsqr_test():
+    nTests = 100
+
+    # Generate nTests random x vectors
+    xs = [[rd.randint(0, 100)/10. for j in range(100000)] for i in range(nTests)]
+    # Generate the corresponding b vectors
+    A = pr.read_data('Archive/a.txt', 'Archive/b.txt')[0]
+    bs = [np.zeros(300000) for i in range(len(xs))]
+    for aRow in range(len(A[0])):
+        row = A[0][aRow]
+        col = A[1][aRow]
+        val = A[2][aRow]
+        for i in range(len(xs)):
+            x = xs[i]
+            b = bs[i]
+            b[row] += (val * x[col])
+
+    # For each b vector, find x using lsqr
+
+    # Compare the x obtained with the one used in the input using program.py
+
+    # Make sure the cost was less than 1e-3 in all cases
+
+    # Look at the number of iterations for each test and see if they are roughly constant
+
+    # Compute the time it took for each iteration
