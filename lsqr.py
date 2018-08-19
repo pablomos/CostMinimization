@@ -308,3 +308,41 @@ def find_iters():
     mp.show()
     mp.plot(range(len(times)), times)
     mp.show()
+
+# Try different kinds of spare matrix classes
+# CSR and CSC seem roughly equivalent; COO is a bit slower; DOK is too slow
+def find_matrix_class():
+    aFile = 'Archive/A.txt'
+    bFile = 'Archive/b.txt'
+    nCols = 100000
+    maxL = 1e-3
+    maxLerror = 1e-2
+
+    (aLists, b) = pr.read_data(aFile, bFile)
+    vals = aLists[2]
+    rows = aLists[0]
+    cols = aLists[1]
+    nRows = len(b)
+    A = (vals, (rows, cols))
+    myShape = (nRows, nCols)
+
+    aSparses = []
+    aSparses.append(sp.csr_matrix(A, shape = myShape))
+    aSparses.append(sp.coo_matrix(A, shape = myShape))
+    aSparses.append(sp.csc_matrix(A, shape = myShape))
+    #aSparses.append(sp.dok_matrix(aSparses[0]))
+    
+    times = []
+    for aSparse in aSparses:
+        print("Class " + str(type(aSparse)))
+        t0 = tm.time()
+        res = la.lsqr(aSparse, b, atol = 1e-6, btol = 1e-7, iter_lim = 150)
+        t1 = tm.time()
+        L = pr.cost(pr.difference_vector(aLists, res[0], b))
+        Lemp = 0.5 * res[3] * res[3]
+        if np.abs(L - Lemp) / Lemp > maxLerror or L > 1e-3:
+            print("ERROR: wrong cost for class " + str(type(aSparse)))
+        times.append(t1 - t0)
+
+    mp.plot(range(len(times)), times)
+    mp.show()
