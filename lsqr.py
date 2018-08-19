@@ -16,26 +16,21 @@ def create_mock_sparse_matrix():
     rows = [0, 1, 2]
     cols = [0, 1, 2]
     vals = [3, 5, 7]
-    return convert_to_sparse_matrix((rows, cols, vals))
+    return convert_to_sparse_matrix((rows, cols, vals), 3, 3)
 
 # Solve a mock LSQR problem
 def mock_lsqr():
     # The vector b will be [11, 13, 17]
     A = create_mock_sparse_matrix()
     b = [11, 13, 17]
-    (x, reason, nIters) = lsqr_single_sparse(A, b, 1e-8, 1e-8, False)
-    diffVec = A * x - b
-    diffVecSq = diffVec * diffVec
-    sumOfTerms = np.sum(diffVecSq)
-    L = 0.5 * sumOfTerms
-    return (x,L)
+    (x, reason, nIters, r) = lsqr_single_sparse(A, b, 1e-8, 1e-8, False, None)
+    return (x, 0.5 * r * r)
 
 # Try LSQR with a subset of the real data
 def lsqr_subset():
     (A, b) = pr.reduce_data(1000, 1000)
-    (aSparse, (x, reason, nIters)) = lsqr_single(A, b, 1000, 1e-8, 1e-8, False)
-    diffVec = aSparse * x - b
-    L = 0.5 * np.sum(diffVec * diffVec)
+    (x, reason, nIters, r) = lsqr_single(A, b, 1000, 1e-8, 1e-8, False, None)[1]
+    L = 0.5 * r * r
     return (x, L)
 
 # Compute LSQR for a given A,b
@@ -55,10 +50,6 @@ def lsqr_single_sparse(A, b, aTol, bTol, verbose, maxIter):
     t1 = tm.time()
     print(str(t1 - t0) + " s running the actual algorithm")
     return r
-
-# Compute the cost function; A must be of the form (rows, cols, vals)
-def cost(A, b, x):
-    return pr.cost(pr.difference_vector(A, x, b))
 
 # Try LSQR with the entire data
 # aTol and bTol represent the actual error in the input data
@@ -80,7 +71,7 @@ def lsqr(aFile, bFile, nCols, aTol = 1e-6, bTol = 1e-7, verbose = True, maxIter 
     print(str(tEnd - tStart) + " s in total")
     return retVal
 
-# Generate random b vectors
+# Generate random b vectors; realB must be a NumPy array
 def gen_rand_b(A, realB, lenX, nTests, xMax, sc):
     realBNorm = np.sqrt(np.sum(realB * realB))
 
@@ -134,7 +125,7 @@ def lsqr_test(aTol, bTol, nTests):
     for i in range(len(bs)):
         print("Test " + str(i))
         b = bs[i]
-        (x, reason, nIters) = lsqr_single_sparse(aSparse, b, aTol, bTol, False)
+        (x, reason, nIters, r) = lsqr_single_sparse(aSparse, b, aTol, bTol, False, None)
         predictedXs.append(x)
         iters.append(nIters)
 
@@ -144,7 +135,7 @@ def lsqr_test(aTol, bTol, nTests):
             print('ERROR: wrong x result for iteration ' + str(i))
 
         # Make sure the cost was less than maxL in all cases
-        L = cost(A, b, x)
+        L = pr.cost(pr.difference_vector(A, x, b))
         if L > maxL:
             print("The cost is too high: " + str(L))
         costs.append(L)
@@ -169,7 +160,7 @@ def lsqr_test(aTol, bTol, nTests):
     mp.show()
 
 # This doesn't work because it's meant for square matrices
-def gcrot():
+'''def gcrot():
     aFile = 'Archive/a.txt'
     bFile = 'Archive/b.txt'
     nCols = 100000
@@ -177,17 +168,7 @@ def gcrot():
     (A,b) = pr.read_data(aFile, bFile)
     aSparse = convert_to_sparse_matrix(A, len(b), len(b))
     (x, info) = la.gcrotmk(aSparse, b)
-    return (x, info)
-
-def lsmr(aTol, bTol):
-    aFile = 'Archive/a.txt'
-    bFile = 'Archive/b.txt'
-    nCols = 100000
-
-    (A,b) = pr.read_data(aFile, bFile)
-    aSparse = convert_to_sparse_matrix(A, len(b), nCols)
-    r = la.lsmr(aSparse, b, show = True, atol = aTol, btol = bTol)
-    return (r, A, b)
+    return (x, info)'''
 
 def test_tol():
     aT = 1e-6

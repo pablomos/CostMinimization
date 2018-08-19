@@ -62,10 +62,8 @@ def find_smallest_row_column():
             col = int(elements[1])
             if row < smallestRow:
                 smallestRow = row
-                print(line)
             if col < smallestCol:
                 smallestCol = col
-                print(line)
     aFile.close()
     print("Smallest row " + str(smallestRow) + ", col " + str(smallestCol))
 
@@ -85,7 +83,6 @@ def find_smallest_el():
             el = max(row, col)
             if el < smallestEl:
                 smallestEl = el
-                print(line)
     aFile.close()
     print("Smallest element " + str(smallestEl))
 
@@ -140,32 +137,12 @@ def difference_vector(A, x, b):
         res[A[0][i]] += (A[2][i] * x[A[1][i]])
     return res
 
-def difference_vector_dict_and_cost(A, x, b):
-    res = []
-    theCost = 0
-    for i in range(len(b)):
-        res.append(-b[i])
-        if i in A:
-            for col in A[i].keys():
-                res[-1] += A[i][col] * x[col]
-        else:
-            print("Warning: row " + str(i) + " not in A")
-        theCost += (res[-1] * res[-1])
-    return (res, 0.5 * theCost)
-
 # Return the cost function given the difference vector Ax-b
 def cost(diffVec):
     theCost = 0
     for el in diffVec:
         theCost += (el * el)
     return 0.5 * theCost
-
-# Perform a single gradient descent step
-def gradient_descent_step(x, learningRate, A, diffVec):
-    outX = x.copy()
-    for i in range(len(A[0])):
-        outX[A[1][i]] -= (learningRate * A[2][i] * diffVec[A[0][i]])
-    return outX
 
 # Compare a "real" x and the predicted one
 def compare_x_arrays(x, realX):
@@ -185,57 +162,3 @@ def compare_x_arrays(x, realX):
         normPredictedX = np.sqrt(normPredictedX)
         fracDiff = np.sqrt(diffX) / normRealX
         return (normPredictedX, normRealX, fracDiff)
-
-# Compare a "real" x and the predicted one
-def compare_x(x, xFile):
-        theXFile = open(xFile, 'r')
-        realX = []
-        for line in theXFile:
-            realX.append(float(line))
-        theXFile.close()
-        print(compare_x_arrays(x, realX))
-
-# Perform gradient descent on some data
-def gradient_descent(aFile, bFile, nCols, learningRate, xFile, maxIter, adaptive, adaptiveFactor):
-    # Read the data
-    (A,b) = read_data(aFile, bFile)
-    # Initialise x
-    x = [1 for i in range(nCols)]
-    # Perform gradient descent until the stopping condition is satisfied
-    L = 1e9
-    nTries = 0
-    oldL = L
-    oldX = x
-    oldDiffVec = []
-    while nTries < maxIter:
-        diffVec = difference_vector(A, x, b)
-        L = cost(diffVec)
-        if L < 1e-3:
-            break
-        
-        # If the cost worsened, go back and decrease the learning rate
-        realL = L
-        if oldL < L and nTries > 10 and adaptive:
-            x = oldX
-            diffVec = oldDiffVec
-            learningRate /= (adaptiveFactor * adaptiveFactor)
-            L = oldL
-        elif oldL > L and nTries > 10 and adaptive and L < 10:
-            learningRate *= adaptiveFactor
-        oldL = L
-        print("Cost = " + str(realL) + ", learning rate " + str(learningRate) + ", iteration " + str(nTries))
-
-        oldX = x
-        oldDiffVec = diffVec
-        x = gradient_descent_step(x, learningRate, A, diffVec)
-        nTries += 1
-    print("Number of iterations needed: " + str(nTries))
-
-    # If xFile is provided, compare the original x with the predicted x
-    if xFile != "":
-        compare_x(x, xFile)
-
-    # Save the result
-    with open("xOut.txt", "w") as xOutFile:
-        for el in x:
-            xOutFile.write(str(el) + "\n")
