@@ -56,7 +56,8 @@ def cost(A, b, x):
 
 # Try LSQR with the entire data
 # aTol and bTol represent the actual error in the input data
-def lsqr(aFile, bFile, nCols, aTol = 1e-6, bTol = 1e-7, verbose = True):
+# The optimal number of maxIter found in find_iters()
+def lsqr(aFile, bFile, nCols, aTol = 1e-6, bTol = 1e-7, verbose = True, maxIter = 150):
     # Read the data
     (aLists,b) = pr.read_data(aFile, bFile)
     (aSparse, (x, reason, nIters)) = lsqr_single(aLists, b, nCols, aTol, bTol, verbose)
@@ -274,4 +275,36 @@ def compare_algos():
     # Plot the times
     mp.plot(range(len(lsqrTimes)), lsqrTimes, color='red')
     mp.plot(range(len(lsmrTimes)), lsmrTimes, color='blue')
+    mp.show()
+
+# Find the optimal number of iterations
+def find_iters():
+    aFile = 'Archive/A.txt'
+    bFile = 'Archive/b.txt'
+    nCols = 100000
+    maxL = 1e-3
+    maxLerror = 1e-2
+
+    iterLims = [50, 100, 150, 200, 250, 300, 350, None]
+
+    (aLists, b) = pr.read_data(aFile, bFile)
+    aSparse = convert_to_sparse_matrix(aLists, len(b), nCols)
+    
+    Ls = []
+    times = []
+    for iterLim in iterLims:
+        print("Up to " + str(iterLim) + " iterations...")
+        t0 = tm.time()
+        res = la.lsqr(aSparse, b, atol = 1e-6, btol = 1e-7, iter_lim = iterLim)
+        t1 = tm.time()
+        L = pr.cost(pr.difference_vector(aLists, res[0], b))
+        Lemp = 0.5 * res[3] * res[3]
+        if np.abs(L - Lemp) / Lemp > maxLerror:
+            print("ERROR: wrong cost for " + str(iterLim) + " iterations")
+        Ls.append(L)
+        times.append(t1 - t0)
+    
+    mp.semilogy(range(len(Ls)), Ls)
+    mp.show()
+    mp.plot(range(len(times)), times)
     mp.show()
