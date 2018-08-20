@@ -339,3 +339,10 @@ def find_empty_rows():
             i = i + 1
     bFile.close()
 
+def generate_high_b():
+    with open('fakes/b0.txt', 'r') as inf:
+        with open('fakes/bLarge.txt', 'w') as outf:
+            for line in inf:
+                outf.write(str(float(line) * 100) + '\n')
+
+    

@@ -95,20 +95,35 @@ if __name__ == "__main__":
         print("ERROR: wrong number of arguments")
         print("Usage: " + str(sys.argv[0]) + " <A file> <B file>")
         exit(-1)
+    aFile = sys.argv[1]
+    bFile = sys.argv[2]
 
     # Stated in the problem description:
     nCols = 100000
     outFile = 'out.txt'
+    maxL = 1e-3
     # ----------------------------------
 
     # aTol and bTol represent the actual error in the input data
     aTol = 1e-6
     bTol = 1e-7
-    # The optimal number of maxIter found in validation_tests.find_iters()
-    maxIter = 150
+    # The optimal number of iters found in validation_tests.find_iters()
+    iters = 150
 
-    (x, L, reason, nIters, A, b, AS) = lsqr(sys.argv[1], sys.argv[2], nCols, aTol, bTol, maxIter)
+    (x, L, reason, it) = lsqr(aFile, bFile, nCols, aTol, bTol, iters)[:4]
+
+    # If the cost is too high, we might have to tweak some parameters
+    i = 0
+    while L > maxL and i < 2:
+        if iters != None and (it == iters or reason == 7):
+            iters = None
+        else:
+            aTol = 1e-8
+            bTol = 1e-8
+        (x, L, reason, it) = lsqr(aFile, bFile, nCols, aTol, bTol, iters)[:4]
+        i += 1
+
     with open('out.txt', 'w') as outf:
         for val in x:
             outf.write(str(val) + '\n')
-    print("Saved output in " + outFile)
+    print("Cost: " + str(L) + ". Saved output in " + outFile)
