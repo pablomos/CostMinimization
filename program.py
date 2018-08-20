@@ -1,51 +1,3 @@
-import random as rd
-import numpy as np
-
-# Given the input data, reduce to a smaller size
-def reduce_data(nRows, nCols):
-    aFile = open('Archive/A.txt', 'r')
-    aOutFileLines = 0
-    rows = []
-    cols = []
-    vals = []
-    with open('aRed.txt', 'w') as aOutFile:
-        for line in aFile:
-            elements = line.split()
-            row = int(elements[0])
-            col = int(elements[1])
-            val = float(elements[2])
-            if row >= nRows or col >= nCols:
-                continue
-            aOutFile.write(line)
-            rows.append(row)
-            cols.append(col)
-            vals.append(val)
-            aOutFileLines += 1
-    aFile.close()
-    print("Out file has " + str(aOutFileLines) + " lines")
-
-    # Now generate a random x vector of length nCols
-    x = [rd.randint(0, 100)/100. for j in range(nCols)]
-    # Save it for book-keeping
-    with open('xRed.txt', 'w') as xOutFile:
-        for el in x:
-            xOutFile.write(str(el) + "\n")
-
-    # Now generate b by multiplying A by x
-    b = np.zeros(nRows)
-    for i in range(len(rows)):
-        b[rows[i]] += (x[cols[i]] * vals[i])
-    nonZeroEls = 0
-    with open('bRed.txt', 'w') as bOutFile:
-        for el in b:
-            if el != 0:
-                nonZeroEls += 1
-            bOutFile.write(str(el) + "\n")
-    print("There are " + str(nonZeroEls) + " non-zero elements in b")
-    
-    A = (rows, cols, vals)
-    return (A, b)
-
 # Find the smallest row and column numbers in A
 def find_smallest_row_column():
     smallestRow = 1e6
@@ -143,22 +95,3 @@ def cost(diffVec):
     for el in diffVec:
         theCost += (el * el)
     return 0.5 * theCost
-
-# Compare a "real" x and the predicted one
-def compare_x_arrays(x, realX):
-        if len(realX) != len(x):
-            print("Different numbers of elements in real and predicted x!")
-            return -1
-        xSq = 0
-        diffX = 0
-        normPredictedX = 0
-        for i in range(len(realX)):
-            if x[i] == 0:
-                continue
-            xSq += (realX[i] * realX[i])
-            normPredictedX += (x[i] * x[i])
-            diffX += ((realX[i] - x[i]) * (realX[i] - x[i]))
-        normRealX = np.sqrt(xSq)
-        normPredictedX = np.sqrt(normPredictedX)
-        fracDiff = np.sqrt(diffX) / normRealX
-        return (normPredictedX, normRealX, fracDiff)

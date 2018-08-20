@@ -4,14 +4,6 @@ import lsqr as l
 import scipy.sparse.linalg as la
 import not_for_submission as nfs
 
-def test_reduce_data():
-    nR = 1000
-    nC = 1000
-    (A, b) = pr.reduce_data(nR, nC)
-    success = len(A) == 3 and len(A[0]) == len(A[1]) and len(A[0]) == len(A[2]) and len(A[0]) < nR * nC and len(b) == nR
-    if not success:
-        print('ERROR!!! in reduce data')
-
 def test_find_smallest_row_column():
     pr.find_smallest_row_column()
 
@@ -48,7 +40,7 @@ def test_cost():
 def test_compare_x_arrays():
     x1 = [1, 3, 5]
     x2 = [7, 11, 13]
-    (nx1, nx2, fd) = pr.compare_x_arrays(x1, x2)
+    (nx1, nx2, fd) = nfs.compare_x_arrays(x1, x2)
     success = nx1 == np.sqrt(1+9+25) and nx2 == np.sqrt(49+121+169) and fd == np.sqrt(np.sum((np.array(x1) - np.array(x2)) * (np.array(x1) - np.array(x2)))) / nx2
     if not success:
         print('ERROR!!! in compare x arrays')
@@ -72,11 +64,6 @@ def test_create_mock_sparse_matrix():
 
 def test_mock_lsqr():
     (x,L) = l.mock_lsqr()
-    if len(x) < 2 or L < 0:
-        print('ERROR!!! in mock LSQR')
-
-def test_lsqr_subset():
-    (x,L) = l.lsqr_subset()
     if len(x) < 2 or L < 0:
         print('ERROR!!! in mock LSQR')
 
@@ -128,7 +115,7 @@ def test_gen_rand_b():
     nTests = 10
     xMax = 1
     sc = 1e6
-    (xs, bs) = l.gen_rand_b(A, b, nCols, nTests, xMax, sc)
+    (xs, bs) = nfs.gen_rand_b(A, b, nCols, nTests, xMax, sc)
     success = len(xs) == len(bs) and len(xs) == nTests and len(xs[0]) == nCols and len(bs[0]) == len(b)
     if not success:
         print('ERROR!!! in gen rand b')
@@ -144,10 +131,10 @@ def test_lsqr_test():
     aTol = 1e-6
     bTol = 1e-7
     nTests = 1
-    l.lsqr_test(aTol, bTol, nTests)
+    nfs.lsqr_test(aTol, bTol, nTests)
 
 def test_test_tol():
-    l.test_tol()
+    nfs.test_tol()
 
 def test_compare_algos():
     nfs.compare_algos()
@@ -159,7 +146,6 @@ def test_find_matrix_class():
     nfs.find_matrix_class()
 
 def all_tests():
-    test_reduce_data()
     test_find_smallest_row_column()
     test_find_smallest_el()
     test_find_empty_rows()
@@ -170,7 +156,6 @@ def all_tests():
     test_convert_to_sparse_matrix()
     test_create_mock_sparse_matrix()
     test_mock_lsqr()
-    test_lsqr_subset()
     test_lsqr_single()
     test_lsqr_single_sparse()
     test_lsqr()
