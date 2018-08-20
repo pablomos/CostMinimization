@@ -1,6 +1,5 @@
 import scipy.sparse as sp
 import time as tm
-import program as pr
 import numpy as np
 import lsqr as l
 import matplotlib.pyplot as mp
@@ -20,7 +19,7 @@ def compare_algos():
     multFac = 1. / aTol
     
     # Read the data
-    (aLists,b) = pr.read_data(aFile, bFile)
+    (aLists,b) = l.read_data(aFile, bFile)
     # Convert to a sparse matrix
     aSparse = l.convert_to_sparse_matrix(aLists, len(b), nCols)
 
@@ -30,8 +29,8 @@ def compare_algos():
     t1 = tm.time()
     print('LSQR: ' + str(t1 - t0) + ' s')
     x = r[0]
-    dv = pr.difference_vector(aLists, x, b)
-    L = pr.cost(dv)
+    dv = l.difference_vector(aLists, x, b)
+    L = l.cost(dv)
     res = 0.5 * r[3] * r[3]
     if np.abs(L - res) / res > maxErrorL or L > maxL:
         print('ERROR: wrong cost for LSQR')
@@ -42,8 +41,8 @@ def compare_algos():
     t1 = tm.time()
     print('LSMR: ' + str(t1 - t0) + ' s')
     x = r[0]
-    dv = pr.difference_vector(aLists, x, b)
-    L = pr.cost(dv)
+    dv = l.difference_vector(aLists, x, b)
+    L = l.cost(dv)
     res = 0.5 * r[3] * r[3]
     if np.abs(L - res) / res > maxErrorL or L > maxL:
         print('ERROR: wrong cost for LSMR')
@@ -58,8 +57,8 @@ def compare_algos():
         t1 = tm.time()
         lsmrTimes.append(t1 - t0)
         x = r[0]
-        dv = pr.difference_vector(aLists, x, bs[i])
-        L = pr.cost(dv)
+        dv = l.difference_vector(aLists, x, bs[i])
+        L = l.cost(dv)
         res = 0.5 * r[3] * r[3]
         if np.abs(L - res) / res > maxErrorL or L > maxL:
             print('ERROR: wrong cost for LSMR')
@@ -72,8 +71,8 @@ def compare_algos():
         t1 = tm.time()
         lsqrTimes.append(t1 - t0)
         x = r[0]
-        dv = pr.difference_vector(aLists, x, bs[i])
-        L = pr.cost(dv)
+        dv = l.difference_vector(aLists, x, bs[i])
+        L = l.cost(dv)
         res = 0.5 * r[3] * r[3]
         if np.abs(L - res) / res > maxErrorL or L > maxL:
             print('ERROR: wrong cost for LSQR')
@@ -96,7 +95,7 @@ def find_matrix_class():
     maxL = 1e-3
     maxLerror = 1e-2
 
-    (aLists, b) = pr.read_data(aFile, bFile)
+    (aLists, b) = l.read_data(aFile, bFile)
     vals = aLists[2]
     rows = aLists[0]
     cols = aLists[1]
@@ -116,7 +115,7 @@ def find_matrix_class():
         t0 = tm.time()
         res = sp.linalg.lsqr(aSparse, b, atol = 1e-6, btol = 1e-7, iter_lim = 150)
         t1 = tm.time()
-        L = pr.cost(pr.difference_vector(aLists, res[0], b))
+        L = l.cost(l.difference_vector(aLists, res[0], b))
         Lemp = 0.5 * res[3] * res[3]
         if np.abs(L - Lemp) / Lemp > maxLerror or L > 1e-3:
             print("ERROR: wrong cost for class " + str(type(aSparse)))
@@ -136,14 +135,14 @@ def find_iters():
 
     iterLims = [50, 100, 150, 200, 250, 300, 350, None]
 
-    (aLists, b) = pr.read_data(aFile, bFile)
+    (aLists, b) = l.read_data(aFile, bFile)
     aSparse = l.convert_to_sparse_matrix(aLists, len(b), nCols)
     
     Ls = []
     for iterLim in iterLims:
         print("Up to " + str(iterLim) + " iterations...")
         res = sp.linalg.lsqr(aSparse, b, atol = 1e-6, btol = 1e-7, iter_lim = iterLim)
-        L = pr.cost(pr.difference_vector(aLists, res[0], b))
+        L = l.cost(l.difference_vector(aLists, res[0], b))
         Lemp = 0.5 * res[3] * res[3]
         if np.abs(L - Lemp) / Lemp > maxLerror:
             print("ERROR: wrong cost for " + str(iterLim) + " iterations")
@@ -161,7 +160,7 @@ def lsqr_test(aTol, bTol, nTests):
     multFac = 1. / bTol
 
     print("Reading the real data...")
-    aAndRealB = pr.read_data('Archive/a.txt', 'Archive/b.txt')
+    aAndRealB = l.read_data('Archive/a.txt', 'Archive/b.txt')
     A = aAndRealB[0]
     realB = np.array(aAndRealB[1])
 
@@ -188,7 +187,7 @@ def lsqr_test(aTol, bTol, nTests):
             print('ERROR: wrong x result for iteration ' + str(i))
 
         # Make sure the cost was less than maxL in all cases
-        L = pr.cost(pr.difference_vector(A, x, b))
+        L = l.cost(l.difference_vector(A, x, b))
         if L > maxL:
             print("The cost is too high: " + str(L))
         costs.append(L)

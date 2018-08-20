@@ -1,20 +1,19 @@
-import program as pr
 import numpy as np
 import lsqr as l
 import scipy.sparse.linalg as la
-import not_for_submission as nfs
+import validation_tests as vt
 
 def test_find_smallest_row_column():
-    pr.find_smallest_row_column()
+    find_smallest_row_column()
 
 def test_find_smallest_el():
-    pr.find_smallest_el()
+    find_smallest_el()
 
 def test_find_empty_rows():
-    pr.find_empty_rows()
+    find_empty_rows()
 
 def test_read_data():
-    (A, b) = pr.read_data('Archive/A.txt', 'Archive/b.txt')
+    (A, b) = read_data('Archive/A.txt', 'Archive/b.txt')
     success = len(A) == 3 and len(A[0]) == len(A[1]) and len(A[0]) == len(A[2]) and len(A) < len(b) and len(b) > 0
     if not success:
         print('ERROR!!! in read data')
@@ -25,14 +24,14 @@ def test_difference_vector():
     vals = [1, 3, 5]
     x = [7, 11, 13]
     b = [17, 19, 21]
-    dv = pr.difference_vector((rows, cols, vals), x, b)
+    dv = difference_vector((rows, cols, vals), x, b)
     success = dv[0] == -10 and dv[1] == 14 and dv[2] == 44
     if not success:
         print('ERROR!!! in difference vector')
 
 def test_cost():
     dv = [1, 3, 5]
-    L = pr.cost(dv)
+    L = cost(dv)
     success = L == 17.5
     if not success:
         print('ERROR!!! in cost')
@@ -40,7 +39,7 @@ def test_cost():
 def test_compare_x_arrays():
     x1 = [1, 3, 5]
     x2 = [7, 11, 13]
-    (nx1, nx2, fd) = nfs.compare_x_arrays(x1, x2)
+    (nx1, nx2, fd) = vt.compare_x_arrays(x1, x2)
     success = nx1 == np.sqrt(1+9+25) and nx2 == np.sqrt(49+121+169) and fd == np.sqrt(np.sum((np.array(x1) - np.array(x2)) * (np.array(x1) - np.array(x2)))) / nx2
     if not success:
         print('ERROR!!! in compare x arrays')
@@ -115,7 +114,7 @@ def test_gen_rand_b():
     nTests = 10
     xMax = 1
     sc = 1e6
-    (xs, bs) = nfs.gen_rand_b(A, b, nCols, nTests, xMax, sc)
+    (xs, bs) = vt.gen_rand_b(A, b, nCols, nTests, xMax, sc)
     success = len(xs) == len(bs) and len(xs) == nTests and len(xs[0]) == nCols and len(bs[0]) == len(b)
     if not success:
         print('ERROR!!! in gen rand b')
@@ -131,19 +130,19 @@ def test_lsqr_test():
     aTol = 1e-6
     bTol = 1e-7
     nTests = 1
-    nfs.lsqr_test(aTol, bTol, nTests)
+    vt.lsqr_test(aTol, bTol, nTests)
 
 def test_test_tol():
-    nfs.test_tol()
+    vt.test_tol()
 
 def test_compare_algos():
-    nfs.compare_algos()
+    vt.compare_algos()
 
 def test_find_iters():
-    nfs.find_iters()
+    vt.find_iters()
 
 def test_find_matrix_class():
-    nfs.find_matrix_class()
+    vt.find_matrix_class()
 
 def all_tests():
     test_find_smallest_row_column()
