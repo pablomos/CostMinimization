@@ -170,7 +170,7 @@ def lsqr_test(aTol, bTol, nTests):
 
     # For each b vector, find x using lsqr
     print("Converting to sparse matrix...")
-    aSparse = convert_to_sparse_matrix(A, len(realB), lenX)
+    aSparse = l.convert_to_sparse_matrix(A, len(realB), lenX)
     predictedXs = []
     iters = []
     costs = []
