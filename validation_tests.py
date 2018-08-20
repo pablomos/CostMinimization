@@ -5,7 +5,6 @@ import lsqr as l
 import matplotlib.pyplot as mp
 import random as rd
 
-
 # Compare lsqr and lsmr
 # This method shows a consistently slower performance for LSMR
 def compare_algos():
@@ -282,3 +281,61 @@ def test_tol():
     print("Norm R: " + str(normR))
     print("Norm B: " + str(normB))
     print("L: " + str(L))
+
+# Generate random bs and save them
+def save_random_bs():
+    aFile = 'Archive/A.txt'
+    bFile = 'Archive/b.txt'
+    lenX = 100000
+    nTests = 100
+    xMax = 10
+    sc = 1e6
+
+    (A,b) = l.read_data(aFile, bFile)
+    (xs, bs) = gen_rand_b(A, np.array(b), lenX, nTests, xMax, sc)
+    
+    for i in range(len(xs)):
+        with open('fakes/b' + str(i) + '.txt', 'w') as outb:
+            for b in bs[i]:
+                outb.write(str(b) + '\n')
+        with open('fakes/x' + str(i) + '.txt', 'w') as outx:
+            for x in xs[i]:
+                outx.write(str(x) + '\n')
+
+# Test random bs
+def test_random_bs():
+    nTests = 100
+    aFile = 'Archive/A.txt'
+    maxL = 1e-3
+    nCols = 100000
+
+    for i in range(nTests):
+        print('Test ' + str(i))
+        bFile = 'fakes/b' + str(i) + '.txt'
+        xFile = 'fakes/x' + str(i) + '.txt'
+        (A,b) = l.read_data(aFile, bFile)
+        (x, L, reason, nIters, aLists, b, aSparse) = l.lsqr(aFile, bFile, nCols, verbose = False)
+        myCost = l.cost(l.difference_vector(A, x, b))
+        if myCost > maxL:
+            print('Error in file ' + str(i))
+
+# Find any rows that have no entries
+def find_empty_rows():
+    aFile = open('Archive/A.txt', 'r')
+    dict = {}
+    for line in aFile:
+        elements = line.split()
+        row = int(elements[0])
+        dict[row] = 1
+    aFile.close()
+
+    i = 0
+    bFile = open('Archive/b.txt', 'r')
+    with open('bRed.txt', 'w') as bOutFile:
+        for line in bFile:
+            bVal = float(line)
+            if ((not i in dict) or (dict[i] != 1)) and bVal != 0:
+                print("Row " + str(i) + " is empty. B value is " + line)
+            i = i + 1
+    bFile.close()
+

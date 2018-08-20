@@ -3,14 +3,8 @@ import lsqr as l
 import scipy.sparse.linalg as la
 import validation_tests as vt
 
-def test_find_smallest_row_column():
-    l.find_smallest_row_column()
-
-def test_find_smallest_el():
-    l.find_smallest_el()
-
 def test_find_empty_rows():
-    l.find_empty_rows()
+    vt.find_empty_rows()
 
 def test_read_data():
     (A, b) = l.read_data('Archive/A.txt', 'Archive/b.txt')
@@ -145,8 +139,6 @@ def test_find_matrix_class():
     vt.find_matrix_class()
 
 def all_tests():
-    test_find_smallest_row_column()
-    test_find_smallest_el()
     test_find_empty_rows()
     test_read_data()
     test_difference_vector()
