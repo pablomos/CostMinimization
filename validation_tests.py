@@ -5,6 +5,7 @@ import lsqr as l
 import matplotlib.pyplot as mp
 import random as rd
 
+
 # Compare lsqr and lsmr
 # This method shows a consistently slower performance for LSMR
 def compare_algos():
@@ -49,7 +50,7 @@ def compare_algos():
         print('ERROR: wrong cost for LSMR')
 
     # Now try with fake data
-    (xs, bs) = l.gen_rand_b(aLists, np.array(b), nCols, nFakeTests, maxXValue, multFac)
+    (xs, bs) = gen_rand_b(aLists, np.array(b), nCols, nFakeTests, maxXValue, multFac)
     lsqrTimes = []
     lsmrTimes = []
     for i in range(len(bs)):
@@ -178,7 +179,7 @@ def lsqr_test(aTol, bTol, nTests):
     for i in range(len(bs)):
         print("Test " + str(i))
         b = bs[i]
-        (x, reason, nIters, r) = lsqr_single_sparse(aSparse, b, aTol, bTol, False, None)
+        (x, reason, nIters, r) = l.lsqr_single_sparse(aSparse, b, aTol, bTol, False, None)
         predictedXs.append(x)
         iters.append(nIters)
 
@@ -263,7 +264,7 @@ def test_tol():
     aT = 1e-6
     bT = 1e-6
 
-    (x, L, reason, itn, A, b, aSparse) = lsqr('Archive/A.txt', 'Archive/b.txt', 100000, aT, bT)
+    (x, L, reason, itn, A, b, aSparse) = l.lsqr('Archive/A.txt', 'Archive/b.txt', 100000, aT, bT)
     b = np.array(b)
     normA = 0
     for val in A[2]:
