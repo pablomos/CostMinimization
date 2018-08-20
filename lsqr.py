@@ -1,4 +1,6 @@
 import scipy.sparse as sp
+import scipy.sparse.linalg as la
+import sys
 
 # Create CSR matrix from lists of rows, columns and values
 '''
@@ -36,8 +38,7 @@ This method seems to implement the LSQR algorithm presented in Paige & Saunders 
 We also tried LSMR, featured in the same package, but it was slower
 '''
 def lsqr_single_sparse(A, b, aTol, bTol, verbose, maxIter):
-    r = sp.linalg.lsqr(A, b, atol = aTol, btol = bTol, show = verbose, iter_lim = maxIter)[:4]
-    return r
+    return la.lsqr(A, b, atol = aTol, btol = bTol, show = verbose, iter_lim = maxIter)[:4]
 
 # Try LSQR with the entire data
 # aTol and bTol represent the actual error in the input data
@@ -47,8 +48,7 @@ def lsqr(aFile, bFile, nCols, aTol = 1e-6, bTol = 1e-7, verbose = True, maxIter 
     (aLists,b) = read_data(aFile, bFile)
     (aSparse, (x, reason, nIters, r)) = lsqr_single(aLists, b, nCols, aTol, bTol, verbose, maxIter)
     L = 0.5 * r * r
-    retVal = (x, L, reason, nIters, aLists, b, aSparse)
-    return retVal
+    return (x, L, reason, nIters, aLists, b, aSparse)
 
 # Find the smallest row and column numbers in A
 def find_smallest_row_column():
@@ -147,3 +147,20 @@ def cost(diffVec):
     for el in diffVec:
         theCost += (el * el)
     return 0.5 * theCost
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("ERROR: wrong number of arguments")
+        print("Usage: " + str(sys.argv[0]) + " <A file> <B file>")
+        exit(-1)
+
+    # Stated in the problem description:
+    nCols = 100000
+    outFile = 'out.txt'
+    # ----------------------------------
+
+    (x, L, reason, nIters, aLists, b, aSparse) = lsqr(sys.argv[1], sys.argv[2], nCols, verbose = False)
+    with open('out.txt', 'w') as outf:
+        for val in x:
+            outf.write(str(val) + '\n')
+    print("Saved output in " + outFile)
