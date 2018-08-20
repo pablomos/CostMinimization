@@ -1,5 +1,4 @@
 import scipy.sparse as sp
-import program as pr
 
 # Create CSR matrix from lists of rows, columns and values
 '''

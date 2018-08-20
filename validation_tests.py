@@ -3,6 +3,7 @@ import time as tm
 import numpy as np
 import lsqr as l
 import matplotlib.pyplot as mp
+import random as rd
 
 # Compare lsqr and lsmr
 # This method shows a consistently slower performance for LSMR

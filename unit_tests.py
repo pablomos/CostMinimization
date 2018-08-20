@@ -4,16 +4,16 @@ import scipy.sparse.linalg as la
 import validation_tests as vt
 
 def test_find_smallest_row_column():
-    find_smallest_row_column()
+    l.find_smallest_row_column()
 
 def test_find_smallest_el():
-    find_smallest_el()
+    l.find_smallest_el()
 
 def test_find_empty_rows():
-    find_empty_rows()
+    l.find_empty_rows()
 
 def test_read_data():
-    (A, b) = read_data('Archive/A.txt', 'Archive/b.txt')
+    (A, b) = l.read_data('Archive/A.txt', 'Archive/b.txt')
     success = len(A) == 3 and len(A[0]) == len(A[1]) and len(A[0]) == len(A[2]) and len(A) < len(b) and len(b) > 0
     if not success:
         print('ERROR!!! in read data')
@@ -24,14 +24,14 @@ def test_difference_vector():
     vals = [1, 3, 5]
     x = [7, 11, 13]
     b = [17, 19, 21]
-    dv = difference_vector((rows, cols, vals), x, b)
+    dv = l.difference_vector((rows, cols, vals), x, b)
     success = dv[0] == -10 and dv[1] == 14 and dv[2] == 44
     if not success:
         print('ERROR!!! in difference vector')
 
 def test_cost():
     dv = [1, 3, 5]
-    L = cost(dv)
+    L = l.cost(dv)
     success = L == 17.5
     if not success:
         print('ERROR!!! in cost')
