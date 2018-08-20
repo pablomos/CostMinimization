@@ -259,29 +259,6 @@ def gen_rand_b(A, realB, lenX, nTests, xMax, sc):
         fakeX *= factor
     return (xs, fakeBs)
 
-def test_tol():
-    aT = 1e-6
-    bT = 1e-6
-
-    (x, L, reason, itn, A, b, aSparse) = l.lsqr('Archive/A.txt', 'Archive/b.txt', 100000, aT, bT)
-    b = np.array(b)
-    normA = 0
-    for val in A[2]:
-        normA += (val * val)
-    normA = np.sqrt(normA)
-    normX = np.sqrt(np.sum(x * x))
-    normR = np.sqrt(2*L)
-    normB = np.sqrt(np.sum(b * b))
-    
-    RHS = aT * normA * normX + bT * normB
-    LHS = normR
-    print(str(LHS) + ", " + str(RHS))
-    print("Norm A: " + str(normA))
-    print("Norm X: " + str(normX))
-    print("Norm R: " + str(normR))
-    print("Norm B: " + str(normB))
-    print("L: " + str(L))
-
 # Generate random bs and save them
 def save_random_bs():
     aFile = 'Archive/A.txt'

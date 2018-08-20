@@ -94,12 +94,12 @@ def test_lsqr():
     verbose = False
     maxIter = None
     (x, L, reason, nIters, aLists, b, aSparse) = l.lsqr(aFile,bFile,nCols,aTol,bTol,verbose,maxIter)
-    success = len(x) == nCols and reason == 1
+    success = len(x) == nCols
     if not success:
         print('ERROR!!! in LSQR')
-        print(len(res[0]))
+        print(len(x))
         print(nCols)
-        print(res[2])
+        print(reason)
         
 def test_gen_rand_b():
     A = ([0,1,2], [0,1,2], [1,3,5])
@@ -126,9 +126,6 @@ def test_lsqr_test():
     nTests = 1
     vt.lsqr_test(aTol, bTol, nTests)
 
-def test_test_tol():
-    vt.test_tol()
-
 def test_compare_algos():
     vt.compare_algos()
 
@@ -152,7 +149,6 @@ def all_tests():
     test_lsqr()
     test_gen_rand_b()
     test_lsqr_test()
-    test_test_tol()
     test_compare_algos()
     test_find_iters()
     test_find_matrix_class()
