@@ -2,6 +2,7 @@ import program as pr
 import numpy as np
 import lsqr as l
 import scipy.sparse.linalg as la
+import not_for_submission as nfs
 
 def test_reduce_data():
     nR = 1000
@@ -149,13 +150,13 @@ def test_test_tol():
     l.test_tol()
 
 def test_compare_algos():
-    l.compare_algos()
+    nfs.compare_algos()
 
 def test_find_iters():
-    l.find_iters()
+    nfs.find_iters()
 
 def test_find_matrix_class():
-    l.find_matrix_class()
+    nfs.find_matrix_class()
 
 def all_tests():
     test_reduce_data()
